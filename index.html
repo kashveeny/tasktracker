@@ -36,7 +36,7 @@
     -webkit-font-smoothing:antialiased;
   }
   button{font-family:inherit;cursor:pointer;}
-  input,textarea{font-family:inherit;}
+  input,textarea,select{font-family:inherit;}
   :focus-visible{outline:2px solid var(--accent-purple);outline-offset:2px;}
   ::selection{background:var(--accent-purple);color:#160c26;}
   ::-webkit-scrollbar{width:9px;height:9px;}
@@ -84,7 +84,25 @@
   }
   @keyframes blink{ 50%{opacity:0;} }
   @media (prefers-reduced-motion: reduce){ .brand::after{animation:none;opacity:1;} }
-  .cat-list{display:flex;flex-direction:column;gap:2px;flex:1;}
+
+  .nav-label{
+    font-family:var(--font-mono);font-size:10px;color:var(--text-faint);
+    text-transform:uppercase;letter-spacing:0.06em;
+    padding:14px 10px 6px 10px;
+  }
+  .nav-label:first-of-type{padding-top:0;}
+
+  .cal-nav-btn{
+    display:flex;align-items:center;gap:10px;width:100%;
+    background:transparent;border:none;border-left:3px solid transparent;
+    color:var(--text-dim);padding:10px 10px;border-radius:0 6px 6px 0;
+    font-size:14px;text-align:left;transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .cal-nav-btn .glyph{font-size:14px;flex-shrink:0;}
+  .cal-nav-btn:hover{background:var(--surface-2);color:var(--text);}
+  .cal-nav-btn.active{background:var(--surface-2);color:var(--text);border-left-color:var(--accent-purple);}
+
+  .cat-list{display:flex;flex-direction:column;gap:2px;}
   .cat-tab{
     display:flex;
     align-items:center;
@@ -150,7 +168,7 @@
   }
 
   .sidebar-foot{
-    padding-top:14px;margin-top:8px;border-top:1px solid var(--border);
+    margin-top:auto;padding-top:14px;border-top:1px solid var(--border);
     font-family:var(--font-mono);font-size:10px;color:var(--text-faint);
   }
 
@@ -163,6 +181,7 @@
   .board-header{
     display:flex;align-items:center;justify-content:space-between;
     margin-bottom:18px;
+    flex-wrap:wrap;gap:10px;
   }
   .board-header h1{
     font-family:var(--font-display);
@@ -241,8 +260,9 @@
   }
   .task-meta{
     font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);
-    margin-top:5px;
+    margin-top:5px;display:flex;gap:10px;flex-wrap:wrap;
   }
+  .task-meta .overdue{color:var(--danger);}
 
   .done-drawer{margin-top:18px;border-top:1px solid var(--border);padding-top:10px;}
   .done-toggle{
@@ -256,6 +276,47 @@
   .done-list{margin-top:8px;}
   .task-row.done{opacity:0.55;}
   .task-row.done .task-title{text-decoration:line-through;color:var(--text-dim);}
+
+  /* ---------- Calendar ---------- */
+  .calendar-nav{display:flex;align-items:center;gap:10px;}
+  .calendar-nav button{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);
+    border-radius:6px;width:30px;height:30px;font-size:14px;
+  }
+  .calendar-nav button:hover{border-color:var(--accent-purple);color:var(--accent-purple);}
+  .calendar-month-label{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);min-width:130px;text-align:center;}
+  .calendar-today-btn{
+    background:none;border:1px solid var(--border);color:var(--text-faint);
+    border-radius:6px;padding:6px 10px;font-size:11.5px;font-family:var(--font-mono);
+  }
+  .calendar-today-btn:hover{color:var(--text-dim);border-color:var(--text-faint);}
+
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding-bottom:24px;}
+  .calendar-dow{
+    font-family:var(--font-mono);font-size:10px;color:var(--text-faint);
+    text-align:left;padding:2px 4px 6px 4px;text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .calendar-cell{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    min-height:96px;padding:6px;display:flex;flex-direction:column;gap:4px;
+  }
+  .calendar-cell.other-month{opacity:0.35;}
+  .calendar-cell.today{border-color:var(--accent-purple);}
+  .calendar-date{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+  .calendar-cell.today .calendar-date{color:var(--accent-purple);font-weight:600;}
+  .cal-task{
+    font-size:11px;padding:3px 6px;border-radius:5px;background:var(--surface-2);
+    border-left:3px solid var(--cat-color, var(--border));
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;
+  }
+  .cal-task:hover{background:var(--surface-3);}
+  .cal-task.done{opacity:0.5;text-decoration:line-through;}
+  .cal-more{font-size:10px;color:var(--text-faint);font-family:var(--font-mono);padding-left:2px;}
+
+  @media (max-width:900px){
+    .calendar-cell{min-height:64px;font-size:11px;}
+    .cal-task{font-size:10px;}
+  }
 
   /* ---------- Modal ---------- */
   .overlay{
@@ -280,11 +341,14 @@
     font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);
     text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;display:block;
   }
-  .modal input[type=text], .modal textarea, .modal select{
+  .field-row{display:flex;gap:10px;}
+  .field-row > div{flex:1;}
+  .modal input[type=text], .modal input[type=date], .modal textarea, .modal select{
     width:100%;background:var(--surface-2);border:1px solid var(--border);
     color:var(--text);border-radius:8px;padding:10px 11px;font-size:14px;
     margin-bottom:14px;resize:vertical;
   }
+  .modal input[type=date]{color-scheme:dark;}
   .modal textarea{min-height:90px;line-height:1.5;}
   .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
   .btn{border:none;border-radius:7px;padding:9px 15px;font-size:13px;font-weight:600;}
@@ -293,89 +357,6 @@
   .btn-ghost:hover{color:var(--text);}
   .btn-danger-text{background:none;border:none;color:var(--text-faint);font-size:12.5px;}
   .btn-danger-text:hover{color:var(--danger);}
-
-  /* ---------- Agent dock ---------- */
-  .agent-dock{position:fixed;bottom:22px;right:26px;z-index:40;}
-  .agent-fab{
-    background:var(--accent-purple);color:#160c26;border:none;
-    border-radius:24px;padding:12px 18px;font-weight:600;font-size:13.5px;
-    display:flex;align-items:center;gap:8px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.35);
-  }
-  .agent-fab::before{content:'●';font-size:9px;}
-  .agent-panel{
-    position:fixed;bottom:22px;right:26px;
-    width:360px;max-width:calc(100vw - 32px);
-    height:480px;max-height:calc(100vh - 100px);
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:12px;display:flex;flex-direction:column;
-    box-shadow:0 20px 60px rgba(0,0,0,0.55);
-    overflow:hidden;
-    animation:panelIn .18s cubic-bezier(.2,.9,.3,1);
-  }
-  @keyframes panelIn{ from{opacity:0;transform:translateY(10px) scale(0.97);} to{opacity:1;transform:none;} }
-  .agent-head{
-    display:flex;align-items:center;gap:8px;
-    padding:12px 14px;border-bottom:1px solid var(--border);
-    font-family:var(--font-mono);font-size:12px;color:var(--text-dim);
-    background:var(--surface-2);
-  }
-  .agent-head .dots{display:flex;gap:5px;margin-right:4px;}
-  .agent-head .dots span{width:8px;height:8px;border-radius:50%;}
-  .agent-head .dots span:nth-child(1){background:#ff6b6b;}
-  .agent-head .dots span:nth-child(2){background:#f6c453;}
-  .agent-head .dots span:nth-child(3){background:var(--accent-purple);}
-  .agent-head .label{flex:1;}
-  .agent-head .close-btn{background:none;border:none;color:var(--text-faint);font-size:16px;}
-  .agent-head .close-btn:hover{color:var(--text);}
-  .agent-head .key-btn{
-    background:none;border:1px solid var(--border);color:var(--text-faint);
-    font-family:var(--font-mono);font-size:10.5px;border-radius:5px;
-    padding:3px 7px;margin-right:2px;
-  }
-  .agent-head .key-btn:hover{color:var(--accent-purple);border-color:var(--accent-purple);}
-  .key-bar{
-    padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);
-    display:flex;flex-wrap:wrap;gap:6px;
-  }
-  .key-bar input{
-    flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);
-    color:var(--text);border-radius:6px;padding:7px 9px;font-size:12.5px;font-family:var(--font-mono);
-  }
-  .key-bar button{
-    background:var(--accent-purple);color:#160c26;border:none;border-radius:6px;
-    padding:0 12px;font-size:12.5px;font-weight:600;
-  }
-  .key-bar .key-hint{
-    width:100%;font-size:11px;color:var(--text-faint);line-height:1.4;
-  }
-  .key-bar .key-hint a{color:var(--text-dim);}
-  .agent-messages{
-    flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;
-    font-size:13px;
-  }
-  .msg{max-width:88%;padding:9px 11px;border-radius:9px;line-height:1.45;white-space:pre-wrap;}
-  .msg.user{align-self:flex-end;background:var(--surface-3);color:var(--text);}
-  .msg.agent{
-    align-self:flex-start;background:var(--surface-2);color:var(--text);
-    font-family:var(--font-mono);font-size:12.5px;border-left:2px solid var(--accent-purple);
-  }
-  .msg.agent::before{content:'agent$ ';color:var(--accent-purple);}
-  .msg.error{border-left-color:var(--danger);}
-  .msg.error::before{color:var(--danger);}
-  .msg.thinking{color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;}
-  .msg.thinking::after{content:'';animation:dots 1.2s steps(4) infinite;}
-  @keyframes dots{ 0%{content:'';} 25%{content:'.';} 50%{content:'..';} 75%{content:'...';} }
-  @media (prefers-reduced-motion: reduce){ .msg.thinking::after{animation:none;content:'...';} }
-  .agent-form{display:flex;border-top:1px solid var(--border);padding:10px;gap:8px;}
-  .agent-form input{
-    flex:1;background:var(--surface-2);border:1px solid var(--border);
-    color:var(--text);border-radius:8px;padding:9px 10px;font-size:13px;
-  }
-  .agent-form button{
-    background:var(--accent-purple);color:#160c26;border:none;border-radius:8px;
-    padding:0 14px;font-weight:600;font-size:13px;
-  }
 
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important;}
@@ -388,14 +369,15 @@
       padding:12px 12px;align-items:center;border-right:none;border-bottom:1px solid var(--border);
     }
     .brand{padding:4px 12px 4px 4px;}
-    .cat-list{flex-direction:row;flex:none;}
+    .nav-label{display:none;}
+    .cal-nav-btn{border-left:none;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;white-space:nowrap;}
+    .cal-nav-btn.active{border-bottom-color:var(--accent-purple);}
+    .cat-list{flex-direction:row;}
     .cat-tab{border-left:none;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;white-space:nowrap;}
     .cat-tab.active{border-bottom-color:var(--cat-color,var(--accent-purple));}
     .add-cat-row{margin-top:0;margin-left:6px;}
     .sidebar-foot{display:none;}
     .board{padding:18px 16px 0 16px;}
-    .agent-panel{width:calc(100vw - 32px);right:16px;left:16px;}
-    .agent-dock{right:16px;bottom:16px;}
   }
 </style>
 </head>
@@ -404,50 +386,22 @@
 <div id="app">
   <aside class="sidebar">
     <div class="brand">task.log</div>
+
+    <div class="nav-label">views</div>
+    <button class="cal-nav-btn" id="calendarNavBtn"><span class="glyph">▦</span><span>Calendar</span></button>
+
+    <div class="nav-label">categories</div>
     <nav class="cat-list" id="catList"></nav>
     <div class="add-cat-row" id="addCatRow">
       <button class="add-cat-btn" id="addCatBtn">+ new category</button>
     </div>
-    <div class="sidebar-foot">saved locally // synced across sessions</div>
+
+    <div class="sidebar-foot">saved in this browser</div>
   </aside>
 
   <main class="board">
-    <div class="board-header">
-      <h1 id="boardTitle"><span class="dot" id="boardDot"></span><span id="boardTitleText"></span></h1>
-      <button class="add-task-btn" id="addTaskBtn">+ add task</button>
-    </div>
-    <div class="board-scroll">
-      <div id="activeList"></div>
-      <div class="done-drawer">
-        <button class="done-toggle" id="doneToggle"><span class="chev">▸</span> done (<span id="doneCount">0</span>)</button>
-        <div class="done-list" id="doneList" hidden></div>
-      </div>
-    </div>
+    <div id="boardArea"></div>
   </main>
-</div>
-
-<div class="agent-dock" id="agentDock">
-  <button class="agent-fab" id="agentFab">ask agent</button>
-  <div class="agent-panel" id="agentPanel" hidden>
-    <div class="agent-head">
-      <span class="dots"><span></span><span></span><span></span></span>
-      <span class="label">task.log — agent</span>
-      <button class="key-btn" id="agentKeyBtn" title="Set API key">key</button>
-      <button class="close-btn" id="agentClose">×</button>
-    </div>
-    <div class="key-bar" id="keyBar" hidden>
-      <input id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off">
-      <button id="keySave" type="button">save</button>
-      <div class="key-hint">stored only in your browser. get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a></div>
-    </div>
-    <div class="agent-messages" id="agentMessages">
-      <div class="msg agent">ask me about your tasks, or tell me to add/finish one.</div>
-    </div>
-    <form class="agent-form" id="agentForm">
-      <input id="agentInput" type="text" placeholder="e.g. add 'finish CS101 pset' to uni" autocomplete="off">
-      <button type="submit">send</button>
-    </form>
-  </div>
 </div>
 
 <div class="overlay" id="overlay" hidden>
@@ -457,8 +411,16 @@
     <input type="text" id="modalTitle" placeholder="What needs doing?">
     <label class="field-label">Notes / details</label>
     <textarea id="modalNotes" placeholder="Links, context, deadlines, anything worth keeping..."></textarea>
-    <label class="field-label">Category</label>
-    <select id="modalCategory"></select>
+    <div class="field-row">
+      <div>
+        <label class="field-label">Category</label>
+        <select id="modalCategory"></select>
+      </div>
+      <div>
+        <label class="field-label">Due date</label>
+        <input type="date" id="modalDueDate">
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-danger-text" id="modalDelete" hidden>delete task</button>
       <div style="flex:1;"></div>
@@ -472,11 +434,20 @@
 (function(){
   const PALETTE = ['#ff8fa3','#7dc4ff','#5eead4','#ffb86b','#f6c453','#a3e635','#c792ea'];
   let state = null;
+  let viewMode = 'board'; // 'board' | 'calendar'
   let activeCategoryId = null;
   let editingTaskId = null; // null = creating new
   let doneOpen = false;
 
+  const today = new Date();
+  let calYear = today.getFullYear();
+  let calMonth = today.getMonth(); // 0-indexed
+
   function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+  function todayStr(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
 
   function defaultState(){
     return {
@@ -519,23 +490,41 @@
   function fmtTime(ts){
     if(!ts) return '';
     const d = new Date(ts);
-    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' +
-           d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  }
+
+  function fmtDue(dateStr){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    return dt.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  }
+
+  function isOverdue(t){
+    if(!t.dueDate || t.done) return false;
+    return t.dueDate < todayStr();
+  }
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
   }
 
   // ---------- Rendering ----------
   function render(){
     renderSidebar();
-    renderBoard();
+    if(viewMode === 'calendar') renderCalendar();
+    else renderBoard();
   }
 
   function renderSidebar(){
+    document.getElementById('calendarNavBtn').classList.toggle('active', viewMode==='calendar');
     const list = document.getElementById('catList');
     list.innerHTML = '';
     state.categories.forEach(cat=>{
       const activeCount = state.tasks.filter(t=>t.categoryId===cat.id && !t.done).length;
       const btn = document.createElement('button');
-      btn.className = 'cat-tab' + (cat.id===activeCategoryId ? ' active':'');
+      btn.className = 'cat-tab' + (viewMode==='board' && cat.id===activeCategoryId ? ' active':'');
       btn.style.setProperty('--cat-color', cat.color);
       btn.innerHTML = `<span class="dot" style="background:${cat.color}"></span>
         <span class="name">${escapeHtml(cat.name)}</span>
@@ -547,6 +536,7 @@
           deleteCategory(cat.id);
           return;
         }
+        viewMode = 'board';
         activeCategoryId = cat.id;
         doneOpen = false;
         render();
@@ -555,29 +545,49 @@
     });
   }
 
+  // ---------- Board view ----------
   function renderBoard(){
     const cat = state.categories.find(c=>c.id===activeCategoryId) || state.categories[0];
     if(!cat) return;
     activeCategoryId = cat.id;
-    document.getElementById('boardTitleText').textContent = cat.name;
-    document.getElementById('boardDot').style.background = cat.color;
+
+    const boardArea = document.getElementById('boardArea');
+    boardArea.innerHTML = `
+      <div class="board-header">
+        <h1><span class="dot" style="background:${cat.color}"></span><span>${escapeHtml(cat.name)}</span></h1>
+        <button class="add-task-btn" id="addTaskBtn">+ add task</button>
+      </div>
+      <div class="board-scroll">
+        <div id="activeList"></div>
+        <div class="done-drawer">
+          <button class="done-toggle" id="doneToggle"><span class="chev">▸</span> done (<span id="doneCount">0</span>)</button>
+          <div class="done-list" id="doneList" hidden></div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('addTaskBtn').addEventListener('click', ()=> openTaskModal(null));
+    document.getElementById('doneToggle').addEventListener('click', ()=>{ doneOpen = !doneOpen; render(); });
 
     const active = state.tasks.filter(t=>t.categoryId===cat.id && !t.done)
-      .sort((a,b)=> b.createdAt - a.createdAt);
+      .sort((a,b)=>{
+        if(a.dueDate && b.dueDate) return a.dueDate < b.dueDate ? -1 : 1;
+        if(a.dueDate) return -1;
+        if(b.dueDate) return 1;
+        return b.createdAt - a.createdAt;
+      });
     const done = state.tasks.filter(t=>t.categoryId===cat.id && t.done)
       .sort((a,b)=> (b.completedAt||0) - (a.completedAt||0));
 
     const activeList = document.getElementById('activeList');
-    activeList.innerHTML = '';
     if(active.length===0){
-      activeList.innerHTML = '<div class="empty-state"><span class="glyph">◌</span>nothing here yet — hit "+ add task" or ask the agent</div>';
+      activeList.innerHTML = '<div class="empty-state"><span class="glyph">◌</span>nothing here yet — hit "+ add task"</div>';
     }else{
       active.forEach(t=> activeList.appendChild(renderTaskRow(t, false)));
     }
 
     document.getElementById('doneCount').textContent = done.length;
     const doneList = document.getElementById('doneList');
-    doneList.innerHTML = '';
     done.forEach(t=> doneList.appendChild(renderTaskRow(t, true)));
     doneList.hidden = !doneOpen;
     document.getElementById('doneToggle').classList.toggle('open', doneOpen);
@@ -588,6 +598,17 @@
     row.className = 'task-row' + (isDone ? ' done':'');
     const cat = state.categories.find(c=>c.id===t.categoryId);
     if(cat) row.style.setProperty('--cat-color', cat.color);
+
+    let metaHtml = '';
+    if(isDone){
+      metaHtml = `<span>// done ${fmtTime(t.completedAt)}</span>`;
+    }else if(t.dueDate){
+      const overdueCls = isOverdue(t) ? ' overdue' : '';
+      metaHtml = `<span class="${overdueCls}">${isOverdue(t) ? '// overdue — was due' : '// due'} ${fmtDue(t.dueDate)}</span>`;
+    }else{
+      metaHtml = `<span>// added ${fmtTime(t.createdAt)}</span>`;
+    }
+
     row.innerHTML = `
       <button class="checkbox${isDone?' checked':''}" title="${isDone?'mark not done':'mark done'}">
         <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke="#160c26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -595,7 +616,7 @@
       <div class="task-body">
         <div class="task-title">${escapeHtml(t.title)}</div>
         ${t.notes ? `<div class="task-notes-preview">${escapeHtml(t.notes)}</div>` : ''}
-        <div class="task-meta">${isDone ? '// done ' + fmtTime(t.completedAt) : '// added ' + fmtTime(t.createdAt)}</div>
+        <div class="task-meta">${metaHtml}</div>
       </div>
     `;
     row.querySelector('.checkbox').addEventListener('click', (e)=>{
@@ -607,10 +628,98 @@
     return row;
   }
 
-  function escapeHtml(s){
-    const d = document.createElement('div');
-    d.textContent = s == null ? '' : String(s);
-    return d.innerHTML;
+  // ---------- Calendar view ----------
+  function renderCalendar(){
+    const boardArea = document.getElementById('boardArea');
+    const monthLabel = new Date(calYear, calMonth, 1).toLocaleDateString(undefined,{month:'long', year:'numeric'});
+
+    boardArea.innerHTML = `
+      <div class="board-header">
+        <h1><span>Calendar</span></h1>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="add-task-btn" id="addTaskBtn">+ add task</button>
+        </div>
+      </div>
+      <div class="board-header" style="margin-top:-8px;">
+        <div class="calendar-nav">
+          <button id="calPrev" title="previous month">‹</button>
+          <span class="calendar-month-label">${monthLabel}</span>
+          <button id="calNext" title="next month">›</button>
+        </div>
+        <button class="calendar-today-btn" id="calToday">today</button>
+      </div>
+      <div class="board-scroll">
+        <div class="calendar-grid" id="calGrid"></div>
+      </div>
+    `;
+
+    document.getElementById('addTaskBtn').addEventListener('click', ()=> openTaskModal(null));
+    document.getElementById('calPrev').addEventListener('click', ()=>{
+      calMonth--; if(calMonth<0){calMonth=11; calYear--;}
+      render();
+    });
+    document.getElementById('calNext').addEventListener('click', ()=>{
+      calMonth++; if(calMonth>11){calMonth=0; calYear++;}
+      render();
+    });
+    document.getElementById('calToday').addEventListener('click', ()=>{
+      calYear = today.getFullYear(); calMonth = today.getMonth();
+      render();
+    });
+
+    const grid = document.getElementById('calGrid');
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{
+      const el = document.createElement('div');
+      el.className = 'calendar-dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+
+    const firstOfMonth = new Date(calYear, calMonth, 1);
+    const startOffset = firstOfMonth.getDay(); // 0=Sun
+    const gridStart = new Date(calYear, calMonth, 1 - startOffset);
+
+    const tasksByDate = {};
+    state.tasks.forEach(t=>{
+      if(!t.dueDate) return;
+      (tasksByDate[t.dueDate] = tasksByDate[t.dueDate] || []).push(t);
+    });
+
+    for(let i=0;i<42;i++){
+      const cellDate = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate()+i);
+      const dateStr = cellDate.getFullYear()+'-'+String(cellDate.getMonth()+1).padStart(2,'0')+'-'+String(cellDate.getDate()).padStart(2,'0');
+      const isOtherMonth = cellDate.getMonth() !== calMonth;
+      const isToday = dateStr === todayStr();
+
+      const cell = document.createElement('div');
+      cell.className = 'calendar-cell' + (isOtherMonth ? ' other-month':'') + (isToday ? ' today':'');
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'calendar-date';
+      dateEl.textContent = cellDate.getDate();
+      cell.appendChild(dateEl);
+
+      const dayTasks = (tasksByDate[dateStr] || []).sort((a,b)=> (a.done?1:0) - (b.done?1:0));
+      const shown = dayTasks.slice(0,3);
+      shown.forEach(t=>{
+        const cat = state.categories.find(c=>c.id===t.categoryId);
+        const pill = document.createElement('div');
+        pill.className = 'cal-task' + (t.done ? ' done':'');
+        if(cat) pill.style.setProperty('--cat-color', cat.color);
+        pill.textContent = t.title;
+        pill.title = t.title;
+        pill.addEventListener('click', ()=> openTaskModal(t.id));
+        cell.appendChild(pill);
+      });
+      if(dayTasks.length > shown.length){
+        const more = document.createElement('div');
+        more.className = 'cal-more';
+        more.textContent = '+' + (dayTasks.length - shown.length) + ' more';
+        cell.appendChild(more);
+      }
+
+      grid.appendChild(cell);
+    }
   }
 
   // ---------- Task actions ----------
@@ -623,13 +732,14 @@
     render();
   }
 
-  function addTask({categoryId, title, notes}){
+  function addTask({categoryId, title, notes, dueDate}){
     if(!title || !title.trim()) return null;
     const t = {
       id: uid('task'),
       categoryId: categoryId || activeCategoryId,
       title: title.trim(),
       notes: (notes||'').trim(),
+      dueDate: dueDate || null,
       done:false,
       createdAt: Date.now(),
       completedAt: null
@@ -684,13 +794,15 @@
       document.getElementById('modalHeading').textContent = 'Edit task';
       document.getElementById('modalTitle').value = t.title;
       document.getElementById('modalNotes').value = t.notes || '';
+      document.getElementById('modalDueDate').value = t.dueDate || '';
       catSelect.value = t.categoryId;
       document.getElementById('modalDelete').hidden = false;
     }else{
       document.getElementById('modalHeading').textContent = 'New task';
       document.getElementById('modalTitle').value = '';
       document.getElementById('modalNotes').value = '';
-      catSelect.value = activeCategoryId;
+      document.getElementById('modalDueDate').value = '';
+      catSelect.value = activeCategoryId || state.categories[0].id;
       document.getElementById('modalDelete').hidden = true;
     }
     overlay.hidden = false;
@@ -712,11 +824,12 @@
     const title = document.getElementById('modalTitle').value.trim();
     const notes = document.getElementById('modalNotes').value.trim();
     const categoryId = document.getElementById('modalCategory').value;
+    const dueDate = document.getElementById('modalDueDate').value || null;
     if(!title) return;
     if(editingTaskId){
-      updateTask(editingTaskId, {title, notes, categoryId});
+      updateTask(editingTaskId, {title, notes, categoryId, dueDate});
     }else{
-      addTask({title, notes, categoryId});
+      addTask({title, notes, categoryId, dueDate});
     }
     closeModal();
     render();
@@ -730,7 +843,11 @@
     }
   });
 
-  document.getElementById('addTaskBtn').addEventListener('click', ()=> openTaskModal(null));
+  // ---------- Calendar nav button ----------
+  document.getElementById('calendarNavBtn').addEventListener('click', ()=>{
+    viewMode = 'calendar';
+    render();
+  });
 
   // ---------- Add category ----------
   const addCatRow = document.getElementById('addCatRow');
@@ -738,7 +855,6 @@
   function showAddCatButton(){
     addCatRow.innerHTML = '<button class="add-cat-btn" id="addCatBtn">+ new category</button>';
   }
-
   function showAddCatForm(){
     addCatRow.innerHTML = `<form class="add-cat-form" id="addCatForm">
       <input type="text" id="newCatName" placeholder="category name" autocomplete="off">
@@ -746,206 +862,21 @@
     </form>`;
     document.getElementById('newCatName').focus();
   }
-
   addCatRow.addEventListener('click', (e)=>{
     if(e.target.id==='addCatBtn') showAddCatForm();
   });
-
   addCatRow.addEventListener('submit', (e)=>{
     if(e.target.id!=='addCatForm') return;
     e.preventDefault();
     const name = document.getElementById('newCatName').value.trim();
     if(name){
       const cat = findOrCreateCategory(name);
+      viewMode = 'board';
       activeCategoryId = cat.id;
       saveState();
     }
     showAddCatButton();
     render();
-  });
-
-  document.getElementById('doneToggle').addEventListener('click', ()=>{
-    doneOpen = !doneOpen;
-    render();
-  });
-
-  // ---------- Agent ----------
-  const agentFab = document.getElementById('agentFab');
-  const agentPanel = document.getElementById('agentPanel');
-  const agentMessages = document.getElementById('agentMessages');
-  const agentForm = document.getElementById('agentForm');
-  const agentInput = document.getElementById('agentInput');
-
-  agentFab.addEventListener('click', ()=>{
-    agentPanel.hidden = false;
-    agentFab.hidden = true;
-    agentInput.focus();
-  });
-  document.getElementById('agentClose').addEventListener('click', ()=>{
-    agentPanel.hidden = true;
-    agentFab.hidden = false;
-  });
-
-  const keyBar = document.getElementById('keyBar');
-  const keyInput = document.getElementById('keyInput');
-  document.getElementById('agentKeyBtn').addEventListener('click', ()=>{
-    keyBar.hidden = !keyBar.hidden;
-    if(!keyBar.hidden){
-      keyInput.value = localStorage.getItem('anthropic_api_key') || '';
-      keyInput.focus();
-    }
-  });
-  document.getElementById('keySave').addEventListener('click', ()=>{
-    const val = keyInput.value.trim();
-    if(val){
-      localStorage.setItem('anthropic_api_key', val);
-      addMsgLater('key saved — try asking me something.');
-    }else{
-      localStorage.removeItem('anthropic_api_key');
-    }
-    keyBar.hidden = true;
-  });
-  function addMsgLater(text){
-    // small helper so it can be called before addMsg is defined further down
-    setTimeout(()=> addMsg(text, 'agent'), 0);
-  }
-
-  function addMsg(text, cls){
-    const div = document.createElement('div');
-    div.className = 'msg ' + cls;
-    div.textContent = text;
-    agentMessages.appendChild(div);
-    agentMessages.scrollTop = agentMessages.scrollHeight;
-    return div;
-  }
-
-  function buildContext(){
-    return {
-      categories: state.categories.map(c=>({id:c.id, name:c.name})),
-      tasks: state.tasks.map(t=>({
-        id:t.id, categoryId:t.categoryId, title:t.title, notes:t.notes, done:t.done
-      }))
-    };
-  }
-
-  const SYSTEM_PROMPT = `You are the assistant embedded in a personal to-do app called task.log.
-You will be given the user's current data as JSON (categories and tasks) followed by their message.
-Answer questions about their tasks helpfully and concisely, and/or make changes when asked.
-
-Respond with ONLY valid JSON (no markdown fences, no commentary outside the JSON), in exactly this shape:
-{"reply": "short, conversational reply to show the user", "actions": [ ...zero or more action objects... ]}
-
-Allowed action objects:
-{"type":"add_task","categoryId":"<existing category id, or null>","categoryName":"<name of category if categoryId is null - creates it if it doesn't exist>","title":"...","notes":"..."}
-{"type":"complete_task","id":"<existing task id>"}
-{"type":"reopen_task","id":"<existing task id>"}
-{"type":"update_notes","id":"<existing task id>","notes":"..."}
-{"type":"update_title","id":"<existing task id>","title":"..."}
-{"type":"delete_task","id":"<existing task id>"}
-{"type":"add_category","name":"..."}
-
-Rules:
-- Only reference task/category ids that exist in the data you were given.
-- If the user asks you to add something and doesn't specify a category, put it in a category that fits, or the most recently relevant one, or ask in "reply" and use an empty actions array.
-- If the user asks a question with no requested change, return "actions": [].
-- Keep "reply" short (1-3 sentences), plain language, no markdown formatting.`;
-
-  async function callAgent(userMessage){
-    const context = buildContext();
-    const body = {
-      model: "claude-sonnet-5",
-      max_tokens: 1000,
-      system: SYSTEM_PROMPT,
-      messages: [
-        { role:"user", content: `Current data:\n${JSON.stringify(context)}\n\nUser message: ${userMessage}` }
-      ]
-    };
-
-    const runningInClaude = !!window.storage;
-    const apiKey = localStorage.getItem('anthropic_api_key');
-
-    if(!runningInClaude && !apiKey){
-      const err = new Error('no API key set — click "key" above and paste one in.');
-      err.friendly = true;
-      throw err;
-    }
-
-    const headers = { "Content-Type":"application/json" };
-    if(apiKey){
-      headers["x-api-key"] = apiKey;
-      headers["anthropic-version"] = "2023-06-01";
-      headers["anthropic-dangerous-direct-browser-access"] = "true";
-    }
-
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method:"POST",
-      headers,
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    if(!res.ok){
-      const msg = (data && data.error && data.error.message) ? data.error.message : `request failed (${res.status})`;
-      const err = new Error(msg);
-      err.friendly = true;
-      throw err;
-    }
-    const textBlock = (data.content||[]).find(b=>b.type==='text');
-    if(!textBlock) throw new Error('no response');
-    let clean = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
-    return JSON.parse(clean);
-  }
-
-  function applyActions(actions){
-    let switchTo = null;
-    (actions||[]).forEach(a=>{
-      try{
-        if(a.type==='add_task'){
-          let catId = a.categoryId;
-          if(!catId || !state.categories.find(c=>c.id===catId)){
-            const cat = findOrCreateCategory(a.categoryName || state.categories[0].name);
-            catId = cat.id;
-          }
-          addTask({categoryId:catId, title:a.title, notes:a.notes});
-          switchTo = catId;
-        }else if(a.type==='complete_task'){
-          updateTask(a.id, {done:true, completedAt:Date.now()});
-        }else if(a.type==='reopen_task'){
-          updateTask(a.id, {done:false, completedAt:null});
-        }else if(a.type==='update_notes'){
-          updateTask(a.id, {notes:a.notes});
-        }else if(a.type==='update_title'){
-          updateTask(a.id, {title:a.title});
-        }else if(a.type==='delete_task'){
-          deleteTask(a.id);
-        }else if(a.type==='add_category'){
-          const cat = findOrCreateCategory(a.name);
-          switchTo = switchTo || cat.id;
-        }
-      }catch(err){ console.error('action failed', a, err); }
-    });
-    if(switchTo) activeCategoryId = switchTo;
-    saveState();
-    render();
-  }
-
-  agentForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const msg = agentInput.value.trim();
-    if(!msg) return;
-    addMsg(msg, 'user');
-    agentInput.value = '';
-    const thinking = addMsg('', 'thinking');
-    try{
-      const result = await callAgent(msg);
-      thinking.remove();
-      addMsg(result.reply || 'done.', 'agent');
-      if(result.actions && result.actions.length) applyActions(result.actions);
-    }catch(err){
-      console.error(err);
-      thinking.remove();
-      const text = err && err.friendly ? err.message : 'connection failed — try again in a moment.';
-      addMsg(text, 'agent error');
-    }
   });
 
   // ---------- Init ----------
