@@ -328,6 +328,28 @@
   .agent-head .label{flex:1;}
   .agent-head .close-btn{background:none;border:none;color:var(--text-faint);font-size:16px;}
   .agent-head .close-btn:hover{color:var(--text);}
+  .agent-head .key-btn{
+    background:none;border:1px solid var(--border);color:var(--text-faint);
+    font-family:var(--font-mono);font-size:10.5px;border-radius:5px;
+    padding:3px 7px;margin-right:2px;
+  }
+  .agent-head .key-btn:hover{color:var(--accent-purple);border-color:var(--accent-purple);}
+  .key-bar{
+    padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);
+    display:flex;flex-wrap:wrap;gap:6px;
+  }
+  .key-bar input{
+    flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);
+    color:var(--text);border-radius:6px;padding:7px 9px;font-size:12.5px;font-family:var(--font-mono);
+  }
+  .key-bar button{
+    background:var(--accent-purple);color:#160c26;border:none;border-radius:6px;
+    padding:0 12px;font-size:12.5px;font-weight:600;
+  }
+  .key-bar .key-hint{
+    width:100%;font-size:11px;color:var(--text-faint);line-height:1.4;
+  }
+  .key-bar .key-hint a{color:var(--text-dim);}
   .agent-messages{
     flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;
     font-size:13px;
@@ -410,7 +432,13 @@
     <div class="agent-head">
       <span class="dots"><span></span><span></span><span></span></span>
       <span class="label">task.log — agent</span>
+      <button class="key-btn" id="agentKeyBtn" title="Set API key">key</button>
       <button class="close-btn" id="agentClose">×</button>
+    </div>
+    <div class="key-bar" id="keyBar" hidden>
+      <input id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off">
+      <button id="keySave" type="button">save</button>
+      <div class="key-hint">stored only in your browser. get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a></div>
     </div>
     <div class="agent-messages" id="agentMessages">
       <div class="msg agent">ask me about your tasks, or tell me to add/finish one.</div>
@@ -463,17 +491,28 @@
 
   async function loadState(){
     try{
-      const res = await window.storage.get('todo-data', false);
-      if(res && res.value){
-        const parsed = JSON.parse(res.value);
-        if(parsed && Array.isArray(parsed.categories)) return parsed;
+      if(window.storage){
+        const res = await window.storage.get('todo-data', false);
+        if(res && res.value){
+          const parsed = JSON.parse(res.value);
+          if(parsed && Array.isArray(parsed.categories)) return parsed;
+        }
+      }else{
+        const raw = localStorage.getItem('todo-data');
+        if(raw){
+          const parsed = JSON.parse(raw);
+          if(parsed && Array.isArray(parsed.categories)) return parsed;
+        }
       }
     }catch(e){ /* no data yet */ }
     return defaultState();
   }
 
   async function saveState(){
-    try{ await window.storage.set('todo-data', JSON.stringify(state), false); }
+    try{
+      if(window.storage){ await window.storage.set('todo-data', JSON.stringify(state), false); }
+      else{ localStorage.setItem('todo-data', JSON.stringify(state)); }
+    }
     catch(e){ console.error('save failed', e); }
   }
 
@@ -747,6 +786,30 @@
     agentFab.hidden = false;
   });
 
+  const keyBar = document.getElementById('keyBar');
+  const keyInput = document.getElementById('keyInput');
+  document.getElementById('agentKeyBtn').addEventListener('click', ()=>{
+    keyBar.hidden = !keyBar.hidden;
+    if(!keyBar.hidden){
+      keyInput.value = localStorage.getItem('anthropic_api_key') || '';
+      keyInput.focus();
+    }
+  });
+  document.getElementById('keySave').addEventListener('click', ()=>{
+    const val = keyInput.value.trim();
+    if(val){
+      localStorage.setItem('anthropic_api_key', val);
+      addMsgLater('key saved — try asking me something.');
+    }else{
+      localStorage.removeItem('anthropic_api_key');
+    }
+    keyBar.hidden = true;
+  });
+  function addMsgLater(text){
+    // small helper so it can be called before addMsg is defined further down
+    setTimeout(()=> addMsg(text, 'agent'), 0);
+  }
+
   function addMsg(text, cls){
     const div = document.createElement('div');
     div.className = 'msg ' + cls;
@@ -797,12 +860,35 @@ Rules:
         { role:"user", content: `Current data:\n${JSON.stringify(context)}\n\nUser message: ${userMessage}` }
       ]
     };
+
+    const runningInClaude = !!window.storage;
+    const apiKey = localStorage.getItem('anthropic_api_key');
+
+    if(!runningInClaude && !apiKey){
+      const err = new Error('no API key set — click "key" above and paste one in.');
+      err.friendly = true;
+      throw err;
+    }
+
+    const headers = { "Content-Type":"application/json" };
+    if(apiKey){
+      headers["x-api-key"] = apiKey;
+      headers["anthropic-version"] = "2023-06-01";
+      headers["anthropic-dangerous-direct-browser-access"] = "true";
+    }
+
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
+      headers,
       body: JSON.stringify(body)
     });
     const data = await res.json();
+    if(!res.ok){
+      const msg = (data && data.error && data.error.message) ? data.error.message : `request failed (${res.status})`;
+      const err = new Error(msg);
+      err.friendly = true;
+      throw err;
+    }
     const textBlock = (data.content||[]).find(b=>b.type==='text');
     if(!textBlock) throw new Error('no response');
     let clean = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
@@ -857,7 +943,8 @@ Rules:
     }catch(err){
       console.error(err);
       thinking.remove();
-      addMsg('connection failed — try again in a moment.', 'agent error');
+      const text = err && err.friendly ? err.message : 'connection failed — try again in a moment.';
+      addMsg(text, 'agent error');
     }
   });
 
